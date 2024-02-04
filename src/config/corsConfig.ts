@@ -1,4 +1,4 @@
-const whitelist = ["http://localhost:5173", "https://physioo.netlify.app/"];
+const whitelist = ["http://localhost:5173", "https://physioo.netlify.app"];
 
 // Configure CORS options
 export const corsOptions = {

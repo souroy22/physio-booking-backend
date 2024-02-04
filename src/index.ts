@@ -11,7 +11,7 @@ import connectDB from "./db/dbConfig.ts";
 import { corsOptions } from "./config/corsConfig.ts";
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT: string = process.env.PORT || "8000";
 dotenv.config();
 
 declare global {
@@ -33,6 +33,6 @@ app.get("/", (req: Request, res: Response) => {
 connectDB();
 app.use("/api/v1", router);
 
-app.listen(PORT, () => {
+app.listen(parseInt(PORT, 10), `0.0.0.0`, () => {
   console.log(`Server is running on PORT: ${PORT}`);
 });

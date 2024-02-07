@@ -3,6 +3,7 @@ import Slot from "../models/slotModel.ts";
 import { daywiseFormatData } from "../utils/dayWiseFormatData.ts";
 import Appointments from "../models/appointmentModel.ts";
 import { formatTime } from "../utils/getTime.ts";
+import mongoose from "mongoose";
 
 interface IQuery {
   day?: "Monday" | "Tuesday" | "Wednesday" | "Thusday" | "Friday" | "Saturday";
@@ -80,9 +81,12 @@ const slotControllers = {
         },
         {
           $match: {
-            startMinutes: { $gte: totalStartMinutes },
-            endMinutes: { $lte: totalEndMinutes },
-            availableDoctors: { $ne: [] },
+            $and: [
+              { startMinutes: { $gte: totalStartMinutes } },
+              { endMinutes: { $lte: totalEndMinutes } },
+              { availableDoctors: { $ne: [] } }, // Filter out documents where availableDoctors is not empty
+              { availableDoctors: new mongoose.Types.ObjectId(doctorId) }, // Match doctorId
+            ],
           },
         },
         {
@@ -132,6 +136,7 @@ const slotControllers = {
                 doctor: { $ne: doctor._id },
                 slot: { $ne: slot._id },
               });
+
               if (!isAvailable) {
                 allAvailableSlots.push(slot);
               }
@@ -188,7 +193,6 @@ const slotControllers = {
           .status(400)
           .json({ error: "Please provide all required details" });
       }
-      console.log("Slot ID", slotId);
       let newAppointment = new Appointments({
         slot: slotId,
         doctor: doctorId,

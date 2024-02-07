@@ -7,8 +7,8 @@ const dayRouters = express.Router();
 
 dayRouters.get(
   "/create-timing",
-  verifyToken,
-  checkAdmin,
+  // verifyToken,
+  // checkAdmin,
   dayControllers.createSlotsForCurrentWeek
 );
 

@@ -9,47 +9,30 @@ type DayType =
   | "Saturday";
 
 interface ISlot extends Document {
-  startTime: Number;
-  endTime: Number;
-  isBooked: boolean;
+  startTime: string;
+  endTime: string;
   day: Types.ObjectId;
-  availableDoctor: Types.ObjectId | null;
-  bookedBy: Types.ObjectId | null;
-  remarks: string;
+  availableDoctors: Types.ObjectId[];
 }
 
 const slotSchema = new mongoose.Schema<ISlot>(
   {
     startTime: {
-      type: Number,
+      type: String,
       required: true,
     },
     endTime: {
-      type: Number,
+      type: String,
       required: true,
-    },
-    isBooked: {
-      type: Boolean,
-      default: false,
     },
     day: {
       type: mongoose.Schema.ObjectId,
       ref: "Day",
       required: true,
     },
-    availableDoctor: {
-      type: mongoose.Schema.ObjectId,
-      ref: "User",
-      default: null,
-    },
-    bookedBy: {
-      type: mongoose.Schema.ObjectId,
-      ref: "User",
-      default: null,
-    },
-    remarks: {
-      type: String,
-      default: "",
+    availableDoctors: {
+      type: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
+      default: [],
     },
   },
   { timestamps: true }

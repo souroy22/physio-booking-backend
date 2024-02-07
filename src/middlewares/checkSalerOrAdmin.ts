@@ -9,7 +9,7 @@ const checkSalerOrAdmin = async (
   if (!req.user) {
     return res.status(401).json({ error: "User not found!" });
   }
-  console.log("User", req.user.user);
+  // console.log("User", req.user.user);
   if (req.user.user.role === "Saler" || req.user.user.role === "Admin") {
     next();
     return;

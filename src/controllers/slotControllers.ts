@@ -1,60 +1,159 @@
 import { Request, Response } from "express";
 import Slot from "../models/slotModel.ts";
-import { daywiseFormatData } from "../utils/datWiseFormatData.ts";
+import { daywiseFormatData } from "../utils/dayWiseFormatData.ts";
+import Appointments from "../models/appointmentModel.ts";
+import { formatTime } from "../utils/getTime.ts";
 
 interface IQuery {
   day?: "Monday" | "Tuesday" | "Wednesday" | "Thusday" | "Friday" | "Saturday";
   timing?: "Morning" | "After_Noon" | "Evening";
-  id?: string;
+  doctorId?: string;
 }
 
 const timings = {
-  Morning: { startTime: { $gte: 9 }, endTime: { $lte: 12 } },
-  After_Noon: { startTime: { $gte: 12 }, endTime: { $lte: 16 } },
-  Evening: { startTime: { $gte: 16 }, endTime: { $lte: 20 } },
+  Morning: { startTime: "5:00", endTime: "12:00" },
+  After_Noon: { startTime: "12:00", endTime: "16:00" },
+  Evening: { startTime: "16:00", endTime: "23:00" },
 };
 
 type Match1Type = {
-  isBooked: false;
   startTime?: any;
   endTime?: any;
-  availableDoctor?: any;
+  availableDoctors?: any;
 };
 
 type Match2Type = {
-  isHoliday: boolean;
   day?: string;
 };
 
 const slotControllers = {
   getAvailableSlots: async (req: Request, res: Response) => {
     try {
-      const { day, timing, id }: IQuery = req.query;
-      const match1: Match1Type = { isBooked: false };
+      const { day, timing, doctorId }: IQuery = req.query;
+      const match1: Match1Type = {};
+      let totalStartMinutes;
+      let totalEndMinutes;
       if (timing) {
         const t = timings[timing];
-        match1["startTime"] = t.startTime;
-        match1["endTime"] = t.endTime;
-      }
-      if (id) {
-        match1["availableDoctor"] = id;
+        totalStartMinutes = formatTime(t.startTime);
+        totalEndMinutes = formatTime(t.endTime);
       } else {
-        match1["availableDoctor"] = { $ne: null };
+        totalStartMinutes = formatTime("5:00");
+        totalEndMinutes = formatTime("23:00");
       }
-
-      const match2: Match2Type = { isHoliday: false };
+      if (doctorId) {
+        match1["availableDoctors"] = doctorId;
+      } else {
+        match1["availableDoctors"] = { $ne: null };
+      }
+      const match2: Match2Type = {};
       if (day) {
         match2["day"] = day;
       }
+      let allSlots = await Slot.aggregate([
+        {
+          $project: {
+            startTime: 1,
+            endTime: 1,
+            day: 1,
+            availableDoctors: 1,
+            startMinutes: {
+              $add: [
+                {
+                  $multiply: [
+                    { $toInt: { $substr: ["$startTime", 0, 2] } },
+                    60,
+                  ],
+                },
+                { $toInt: { $substr: ["$startTime", 3, 2] } },
+              ],
+            },
+            endMinutes: {
+              $add: [
+                {
+                  $multiply: [{ $toInt: { $substr: ["$endTime", 0, 2] } }, 60],
+                },
+                { $toInt: { $substr: ["$endTime", 3, 2] } },
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            startMinutes: { $gte: totalStartMinutes },
+            endMinutes: { $lte: totalEndMinutes },
+            availableDoctors: { $ne: [] },
+          },
+        },
+        {
+          $lookup: {
+            from: "days",
+            localField: "day",
+            foreignField: "_id",
+            as: "day",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "availableDoctors",
+            foreignField: "_id",
+            as: "availableDoctors",
+          },
+        },
+        {
+          $unwind: "$day",
+        },
+        {
+          $addFields: {
+            day: { day: "$day.day" },
+            availableDoctors: {
+              $map: {
+                input: "$availableDoctors",
+                as: "doctor",
+                in: "$$doctor.name",
+              },
+            },
+            startTime: "$startTime",
+            endTime: "$endTime",
+          },
+        },
+      ]);
+      console.log("allSlots", allSlots[0]);
 
-      let allSlots = await Slot.find(match1)
-        .populate({
-          path: "day",
-          match: match2,
-        })
-        .exec();
-      allSlots = allSlots.filter((s) => s.day && !(s.day as any).isHoliday);
-      const newFormat: any = daywiseFormatData(allSlots);
+      const allAvailableSlots: any = [];
+      if (!doctorId) {
+        for (const slot of allSlots) {
+          for (const doctor of slot.availableDoctors) {
+            if (
+              !allAvailableSlots.filter((Aslot: any) => Aslot._id === slot._id)
+                .length
+            ) {
+              const isAvailable = await Appointments.findOne({
+                doctor: { $ne: doctor._id },
+                slot: { $ne: slot._id },
+              });
+              if (!isAvailable) {
+                allAvailableSlots.push(slot);
+              }
+            }
+          }
+        }
+      } else {
+        for (const slot of allSlots) {
+          const isAvailable = await Appointments.findOne({
+            doctor: { $ne: doctorId },
+            slot: { $ne: slot._id },
+          });
+          if (!isAvailable) {
+            allAvailableSlots.push(slot);
+          }
+        }
+      }
+      // allSlots = allSlots.filter((s) => s.day && !(s.day as any).isHoliday);
+      // console.log("allAvailableSlots", allAvailableSlots);
+
+      const newFormat: any = daywiseFormatData(allAvailableSlots);
       return res.status(200).json({ slots: newFormat });
     } catch (error) {
       if (error instanceof Error) {
@@ -65,15 +164,16 @@ const slotControllers = {
   },
   getUnScheduledSlots: async (req: Request, res: Response) => {
     try {
-      const slots = await Slot.find({ availableDoctor: null })
+      const { id } = req.user.user;
+      console.log("ID ---", id);
+      const slots = await Slot.find({ availableDoctors: { $nin: [id] } })
         .select({
           _id: 1,
           startTime: 1,
           endTime: 1,
           day: 1,
         })
-        .populate("day")
-        .select({ _id: 1, day: 1 })
+        .populate("day", { _id: 1, day: 1 })
         .exec();
       const allSlots = slots.filter((s) => s.day && !(s.day as any).isHoliday);
       const newFormat: any = daywiseFormatData(allSlots);
@@ -87,21 +187,20 @@ const slotControllers = {
   },
   bookSlot: async (req: Request, res: Response) => {
     try {
-      const { slotId, bookedBy, remarks } = req.body;
+      const { slotId, bookedBy, remarks, doctorId } = req.body;
       if (!(slotId && bookedBy && remarks)) {
         return res
           .status(400)
           .json({ error: "Please provide all required details" });
       }
-      await Slot.findByIdAndUpdate(
-        slotId,
-        {
-          isBooked: true,
-          bookedBy,
-          remarks,
-        },
-        { new: true }
-      );
+      console.log("Slot ID", slotId);
+      let newAppointment = new Appointments({
+        slot: slotId,
+        doctor: doctorId,
+        patient: bookedBy,
+        remarks,
+      });
+      newAppointment = await newAppointment.save();
       return res.status(200).json({ msg: "Booked successfull!" });
     } catch (error) {
       if (error instanceof Error) {
@@ -113,21 +212,45 @@ const slotControllers = {
   getUserSlot: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const slots = await Slot.find({ bookedBy: id })
-        .select({
-          startTime: 1,
-          endTime: 1,
-          day: 1,
-          availableDoctor: 1,
-          remarks: 1,
-        })
-        .populate("availableDoctor", { name: 1, _id: 0 })
-        .populate("day", { day: 1, _id: 0 });
+      const slots = await Appointments.find({ patient: id })
+        .select({ slot: 1, doctor: 1, patient: 1, remarks: 1, _id: 0 })
+        .populate("doctor", { name: 1, _id: 0 })
+        .populate({
+          path: "slot",
+          select: "startTime endTime day -_id",
+          populate: {
+            path: "day",
+            select: "day -_id",
+          },
+        });
+
       return res.status(200).json(slots);
     } catch (error) {
       if (error instanceof Error) {
         console.log(`Error: ${error.message}`);
         return res.status(500).json({ error: "Something went wrong" });
+      }
+    }
+  },
+  getSlotsBasedOnDoctor: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.user.user;
+      const slots = await Slot.find({ availableDoctors: { $in: [id] } })
+        .select({
+          _id: 1,
+          startTime: 1,
+          endTime: 1,
+          day: 1,
+        })
+        .populate("day", { _id: 1, day: 1 })
+        .exec();
+      const allSlots = slots.filter((s) => s.day && !(s.day as any).isHoliday);
+      const newFormattedData: any = daywiseFormatData(allSlots);
+      return res.status(200).json(newFormattedData);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(`Error: ${error.message}`);
+        return res.status(500).json({ error: "Something went wrong!" });
       }
     }
   },

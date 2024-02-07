@@ -15,6 +15,13 @@ export const daywiseFormatData = (allSlots: any) => {
           id: dSlot._id,
         });
       }
+      // if (slot.availableDoctors) {
+      //   const doctors: any = [];
+      //   for (const doctor of slot.availableDoctors) {
+      //     doctors.push(doctor);
+      //   }
+      //   newFormat[day]["doctors"] = doctors;
+      // }
       newFormat[day].slots = formatedSlots;
     }
   }

@@ -7,7 +7,7 @@ import checkDoctor from "../middlewares/checkDoctor.ts";
 const doctorRouters = express.Router();
 
 doctorRouters.put(
-  "/get-all-slots",
+  "/schedule-slots",
   verifyToken,
   checkDoctor,
   doctorControllers.scheduleSlots
@@ -16,7 +16,7 @@ doctorRouters.get(
   "/all",
   verifyToken,
   checkSalerOrAdmin,
-  doctorControllers.getDoctors
+  doctorControllers.getAllDoctors
 );
 
 export default doctorRouters;

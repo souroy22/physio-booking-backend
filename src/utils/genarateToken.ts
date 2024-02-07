@@ -5,7 +5,7 @@ export type USER_TYPE = {
   name: string;
   email: string;
   role: "User" | "Saler" | "Doctor" | "Admin";
-  avatar: string | null;
+  avatar: Buffer | null;
   id: Types.ObjectId;
 };
 

@@ -6,16 +6,23 @@ import checkDoctor from "../middlewares/checkDoctor.ts";
 const slotRouters = express.Router();
 
 slotRouters.get(
-  "/available-slot",
+  "/available-slots",
   verifyToken,
   slotControllers.getAvailableSlots
 );
 
 slotRouters.get(
-  "/unschedule-slots",
+  "/unscheduled-slots",
   verifyToken,
   checkDoctor,
   slotControllers.getUnScheduledSlots
+);
+
+slotRouters.get(
+  "/get-my-slots",
+  verifyToken,
+  checkDoctor,
+  slotControllers.getSlotsBasedOnDoctor
 );
 
 slotRouters.put("/book-slot", verifyToken, slotControllers.bookSlot);

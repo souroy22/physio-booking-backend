@@ -5,9 +5,11 @@ interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  avatar?: string | null;
+  avatar?: Buffer | null;
   role: "User" | "Saler" | "Doctor" | "Admin";
   verified: boolean;
+  address: string;
+  phone: string;
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -28,12 +30,11 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
     },
     avatar: {
-      type: String || null,
+      type: Buffer || null,
       default: null,
     },
     role: {
       type: String,
-      required: true,
       default: "User",
       enum: ["User", "Saler", "Doctor", "Admin"],
     },
@@ -41,6 +42,14 @@ const userSchema = new mongoose.Schema<IUser>(
       type: Boolean,
       required: true,
       default: false,
+    },
+    address: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

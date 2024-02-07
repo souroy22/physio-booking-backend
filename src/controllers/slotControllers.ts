@@ -119,7 +119,6 @@ const slotControllers = {
           },
         },
       ]);
-      console.log("allSlots", allSlots[0]);
 
       const allAvailableSlots: any = [];
       if (!doctorId) {
@@ -150,9 +149,6 @@ const slotControllers = {
           }
         }
       }
-      // allSlots = allSlots.filter((s) => s.day && !(s.day as any).isHoliday);
-      // console.log("allAvailableSlots", allAvailableSlots);
-
       const newFormat: any = daywiseFormatData(allAvailableSlots);
       return res.status(200).json({ slots: newFormat });
     } catch (error) {
@@ -165,7 +161,6 @@ const slotControllers = {
   getUnScheduledSlots: async (req: Request, res: Response) => {
     try {
       const { id } = req.user.user;
-      console.log("ID ---", id);
       const slots = await Slot.find({ availableDoctors: { $nin: [id] } })
         .select({
           _id: 1,

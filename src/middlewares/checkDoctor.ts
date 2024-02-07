@@ -9,7 +9,6 @@ const checkDoctor = async (
   if (!req.user) {
     return res.status(401).json({ error: "User not found!" });
   }
-  // console.log("req.user", req.user);
 
   if (req.user.user.role !== "Doctor") {
     return res.status(403).json({ error: "Forbidden request" });

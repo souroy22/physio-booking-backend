@@ -1,12 +1,12 @@
 {
   "version": 2,
   "name": "Physio",
-  "functions": {
-    "api": {
-      "handler": "src/index.ts",
-      "runtime": "@vercel/node"
+  "builds": [
+    {
+      "src": "src/index.ts",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     { "src": "/api/*", "dest": "src/index.ts" },
     { "src": "/(.*)", "dest": "src/index.ts" }

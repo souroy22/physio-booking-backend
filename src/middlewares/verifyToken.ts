@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import User from "../models/userModel.ts";
 
 export interface IGetUserAuthInfoRequest extends Request {
   user: any;
@@ -18,13 +19,21 @@ export const verifyToken = async (
     }
     const token = authHeader.split(" ")[1];
     req.token = token;
-    await jwt.verify(token, process.env.SECRET_KEY || "", (error, user) => {
-      if (error) {
-        return res.status(401).json({ error: "Invalid token" });
+    await jwt.verify(
+      token,
+      process.env.SECRET_KEY || "",
+      async (error, user) => {
+        if (error) {
+          return res.status(401).json({ error: "Invalid token" });
+        }
+        req.user = user;
+        const isUserExist = await User.findById(req.user.user.id);
+        if (!isUserExist) {
+          return res.status(401).json({ error: "Invalid token" });
+        }
+        next();
       }
-      req.user = user;
-      next();
-    });
+    );
   } catch (error) {
     if (error instanceof Error) {
       console.log(`Error: ${error.message}`);

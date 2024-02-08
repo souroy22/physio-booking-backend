@@ -84,8 +84,12 @@ const slotControllers = {
             $and: [
               { startMinutes: { $gte: totalStartMinutes } },
               { endMinutes: { $lte: totalEndMinutes } },
-              { availableDoctors: { $ne: [] } }, // Filter out documents where availableDoctors is not empty
-              { availableDoctors: new mongoose.Types.ObjectId(doctorId) }, // Match doctorId
+              {
+                availableDoctors: doctorId
+                  ? new mongoose.Types.ObjectId(doctorId)
+                  : { $ne: [] },
+              }, // Filter out documents where availableDoctors is not empty
+              // { availableDoctors: new mongoose.Types.ObjectId(doctorId) }, // Match doctorId
             ],
           },
         },
@@ -115,7 +119,7 @@ const slotControllers = {
               $map: {
                 input: "$availableDoctors",
                 as: "doctor",
-                in: "$$doctor.name",
+                in: "$$doctor",
               },
             },
             startTime: "$startTime",
@@ -133,8 +137,8 @@ const slotControllers = {
                 .length
             ) {
               const isAvailable = await Appointments.findOne({
-                doctor: { $ne: doctor._id },
-                slot: { $ne: slot._id },
+                doctor: doctor._id,
+                slot: slot._id,
               });
 
               if (!isAvailable) {
@@ -146,16 +150,21 @@ const slotControllers = {
       } else {
         for (const slot of allSlots) {
           const isAvailable = await Appointments.findOne({
-            doctor: { $ne: doctorId },
-            slot: { $ne: slot._id },
+            doctor: doctorId,
+            slot: slot._id,
           });
           if (!isAvailable) {
             allAvailableSlots.push(slot);
           }
         }
       }
-      const newFormat: any = daywiseFormatData(allAvailableSlots);
-      return res.status(200).json({ slots: newFormat });
+      const { newFormat, availableDoctors }: any = daywiseFormatData(
+        allAvailableSlots,
+        true
+      );
+      return res
+        .status(200)
+        .json({ slots: newFormat, doctors: availableDoctors });
     } catch (error) {
       if (error instanceof Error) {
         console.log(`Error: ${error.message}`);
@@ -175,9 +184,24 @@ const slotControllers = {
         })
         .populate("day", { _id: 1, day: 1 })
         .exec();
+      const selectedSlots = await Slot.find({ availableDoctors: { $in: [id] } })
+        .select({
+          _id: 1,
+          startTime: 1,
+          endTime: 1,
+          day: 1,
+        })
+        .populate("day", { _id: 1, day: 1 })
+        .exec();
       const allSlots = slots.filter((s) => s.day && !(s.day as any).isHoliday);
       const newFormat: any = daywiseFormatData(allSlots);
-      return res.status(200).json(newFormat);
+      const newFormatSelectedSlots: any = daywiseFormatData(selectedSlots);
+      return res
+        .status(200)
+        .json({
+          unScheduleSlots: newFormat,
+          selectedSlots: newFormatSelectedSlots,
+        });
     } catch (error) {
       if (error instanceof Error) {
         console.log(`Error: ${error.message}`);

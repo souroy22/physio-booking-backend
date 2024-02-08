@@ -1,5 +1,9 @@
-export const daywiseFormatData = (allSlots: any) => {
+export const daywiseFormatData = (
+  allSlots: any,
+  wantDoctor: boolean = false
+) => {
   const newFormat: any = {};
+  const availableDoctors: any = {};
   for (const slot of allSlots) {
     const day: any = (slot.day as any).day;
     if (!newFormat.hasOwnProperty(day)) {
@@ -24,6 +28,12 @@ export const daywiseFormatData = (allSlots: any) => {
       // }
       newFormat[day].slots = formatedSlots;
     }
+    if (slot.availableDoctors?.length) {
+      availableDoctors[slot._id] = slot.availableDoctors;
+    }
+  }
+  if (wantDoctor) {
+    return { newFormat, availableDoctors };
   }
   return newFormat;
 };

@@ -14,35 +14,50 @@ const days = [
 const startTime: number = 5; // 24 hours format
 const endTime: number = 23; // 24 hours format
 const duration: number = 45; // in minutes
+const gap: number = 15; // gap in between every slot
 
 const dayControllers = {
   createSlotsForCurrentWeek: async (req: Request, res: Response) => {
     try {
-      const allTimings = [];
+      const allTimings: any = [];
       for (const day of days) {
         let newDay = new Day({ day, isHoliday: false });
         newDay = await newDay.save();
         const allSlots = [];
-        let hour: number = startTime;
-        let minute: number = 0;
-        while (hour < endTime || !(hour === 23 && minute === 0)) {
-          const startTime = `${hour < 10 ? "0" : ""}${hour}:${
+        let hour = startTime;
+        let minute = 0;
+        while (!(hour === endTime && minute === 0)) {
+          const startTimeFormatted = `${hour < 10 ? "0" : ""}${hour}:${
             minute < 10 ? "0" : ""
           }${minute}`;
-          const endTimeHour = hour + Math.floor((minute + 45) / 60);
-          const endTimeMinute = (minute + duration) % 60;
-          const endTime = `${endTimeHour < 10 ? "0" : ""}${endTimeHour}:${
-            endTimeMinute < 10 ? "0" : ""
-          }${endTimeMinute}`;
+
+          // Calculate end time
+          let endTimeHour = hour;
+          let endTimeMinute = minute + duration;
+          if (endTimeMinute >= 60) {
+            endTimeHour += Math.floor(endTimeMinute / 60);
+            endTimeMinute %= 60;
+          }
+          const endTimeFormatted = `${
+            endTimeHour < 10 ? "0" : ""
+          }${endTimeHour}:${endTimeMinute < 10 ? "0" : ""}${endTimeMinute}`;
+
           const data = {
-            startTime,
-            endTime,
+            startTime: startTimeFormatted,
+            endTime: endTimeFormatted,
             day: newDay._id,
           };
+
+          // Move to next time slot
+          minute += gap;
+          if (minute >= 60) {
+            minute %= 60;
+            hour++;
+          }
           let slot = new Slot(data);
           slot = await slot.save();
-          hour = endTimeHour;
-          minute = endTimeMinute;
+          // hour = endTimeHour;
+          // minute = endTimeMinute;
           allSlots.push({ startTime: slot.startTime, endTime: slot.endTime });
         }
         allTimings.push({ day: newDay.day, slots: allSlots });

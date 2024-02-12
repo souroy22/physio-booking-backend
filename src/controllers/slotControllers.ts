@@ -12,7 +12,7 @@ interface IQuery {
 }
 
 const timings = {
-  Morning: { startTime: "5:00", endTime: "12:00" },
+  Morning: { startTime: "05:00", endTime: "12:00" },
   After_Noon: { startTime: "12:00", endTime: "16:00" },
   Evening: { startTime: "16:00", endTime: "23:00" },
 };
@@ -36,97 +36,108 @@ const slotControllers = {
       let totalEndMinutes;
       if (timing) {
         const t = timings[timing];
-        totalStartMinutes = formatTime(t.startTime);
-        totalEndMinutes = formatTime(t.endTime);
-      } else {
-        totalStartMinutes = formatTime("5:00");
-        totalEndMinutes = formatTime("23:00");
+        // totalStartMinutes = formatTime(t.startTime);
+        // totalEndMinutes = formatTime(t.endTime);
+        match1["startTime"] = { $gte: t.startTime };
+        match1["endTime"] = { $lte: t.endTime };
       }
       if (doctorId) {
         match1["availableDoctors"] = doctorId;
       } else {
-        match1["availableDoctors"] = { $ne: null };
+        match1["availableDoctors"] = { $ne: [] };
       }
       const match2: Match2Type = {};
       if (day) {
         match2["day"] = day;
       }
-      let allSlots = await Slot.aggregate([
-        {
-          $project: {
-            startTime: 1,
-            endTime: 1,
-            day: 1,
-            availableDoctors: 1,
-            startMinutes: {
-              $add: [
-                {
-                  $multiply: [
-                    { $toInt: { $substr: ["$startTime", 0, 2] } },
-                    60,
-                  ],
-                },
-                { $toInt: { $substr: ["$startTime", 3, 2] } },
-              ],
-            },
-            endMinutes: {
-              $add: [
-                {
-                  $multiply: [{ $toInt: { $substr: ["$endTime", 0, 2] } }, 60],
-                },
-                { $toInt: { $substr: ["$endTime", 3, 2] } },
-              ],
-            },
-          },
-        },
-        {
-          $match: {
-            $and: [
-              { startMinutes: { $gte: totalStartMinutes } },
-              { endMinutes: { $lte: totalEndMinutes } },
-              {
-                availableDoctors: doctorId
-                  ? new mongoose.Types.ObjectId(doctorId)
-                  : { $ne: [] },
-              }, // Filter out documents where availableDoctors is not empty
-              // { availableDoctors: new mongoose.Types.ObjectId(doctorId) }, // Match doctorId
-            ],
-          },
-        },
-        {
-          $lookup: {
-            from: "days",
-            localField: "day",
-            foreignField: "_id",
-            as: "day",
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "availableDoctors",
-            foreignField: "_id",
-            as: "availableDoctors",
-          },
-        },
-        {
-          $unwind: "$day",
-        },
-        {
-          $addFields: {
-            day: { day: "$day.day" },
-            availableDoctors: {
-              $map: {
-                input: "$availableDoctors",
-                as: "doctor",
-                in: "$$doctor",
-              },
-            },
-            startTime: "$startTime",
-            endTime: "$endTime",
-          },
-        },
+      console.log("match1", match1);
+
+      let allSlots: any = await Slot.find(match1, {
+        startTime: 1,
+        endTime: 1,
+        day: 1,
+        availableDoctors: 1,
+      }).populate([
+        { path: "day", select: "day" },
+        { path: "availableDoctors", select: "name email" },
       ]);
+
+      // let allSlots = await Slot.aggregate([
+      //   {
+      //     $project: {
+      //       startTime: 1,
+      //       endTime: 1,
+      //       day: 1,
+      //       availableDoctors: 1,
+      //       startMinutes: {
+      //         $add: [
+      //           {
+      //             $multiply: [
+      //               { $toInt: { $substr: ["$startTime", 0, 2] } },
+      //               60,
+      //             ],
+      //           },
+      //           { $toInt: { $substr: ["$startTime", 3, 2] } },
+      //         ],
+      //       },
+      //       endMinutes: {
+      //         $add: [
+      //           {
+      //             $multiply: [{ $toInt: { $substr: ["$endTime", 0, 2] } }, 60],
+      //           },
+      //           { $toInt: { $substr: ["$endTime", 3, 2] } },
+      //         ],
+      //       },
+      //     },
+      //   },
+      //   {
+      //     $match: {
+      //       $and: [
+      //         { startMinutes: { $gte: totalStartMinutes } },
+      //         { endMinutes: { $lte: totalEndMinutes } },
+      //         {
+      //           availableDoctors: doctorId
+      //             ? new mongoose.Types.ObjectId(doctorId)
+      //             : { $ne: [] },
+      //         }, // Filter out documents where availableDoctors is not empty
+      //         // { availableDoctors: new mongoose.Types.ObjectId(doctorId) }, // Match doctorId
+      //       ],
+      //     },
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "days",
+      //       localField: "day",
+      //       foreignField: "_id",
+      //       as: "day",
+      //     },
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "users",
+      //       localField: "availableDoctors",
+      //       foreignField: "_id",
+      //       as: "availableDoctors",
+      //     },
+      //   },
+      //   {
+      //     $unwind: "$day",
+      //   },
+      //   {
+      //     $addFields: {
+      //       day: { day: "$day.day" },
+      //       availableDoctors: {
+      //         $map: {
+      //           input: "$availableDoctors",
+      //           as: "doctor",
+      //           in: "$$doctor",
+      //         },
+      //       },
+      //       startTime: "$startTime",
+      //       endTime: "$endTime",
+      //     },
+      //   },
+      // ]);
 
       const allAvailableSlots: any = [];
       if (!doctorId) {
@@ -196,12 +207,10 @@ const slotControllers = {
       const allSlots = slots.filter((s) => s.day && !(s.day as any).isHoliday);
       const newFormat: any = daywiseFormatData(allSlots);
       const newFormatSelectedSlots: any = daywiseFormatData(selectedSlots);
-      return res
-        .status(200)
-        .json({
-          unScheduleSlots: newFormat,
-          selectedSlots: newFormatSelectedSlots,
-        });
+      return res.status(200).json({
+        unScheduleSlots: newFormat,
+        selectedSlots: newFormatSelectedSlots,
+      });
     } catch (error) {
       if (error instanceof Error) {
         console.log(`Error: ${error.message}`);

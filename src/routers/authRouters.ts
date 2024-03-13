@@ -1,6 +1,6 @@
 import express, { Router } from "express";
-import authControllers from "../controllers/authControllers.ts";
-import { verifyToken } from "../middlewares/verifyToken.ts";
+import authControllers from "../controllers/authControllers";
+import { verifyToken } from "../middlewares/verifyToken";
 
 const authRouters = express.Router();
 

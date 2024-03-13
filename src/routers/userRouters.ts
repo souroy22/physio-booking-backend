@@ -1,7 +1,7 @@
 import express from "express";
-import userControllers from "../controllers/userControllers.ts";
-import { verifyToken } from "../middlewares/verifyToken.ts";
-import checkSalesPerson from "../middlewares/checkSales.ts";
+import userControllers from "../controllers/userControllers";
+import { verifyToken } from "../middlewares/verifyToken";
+import checkSalesPerson from "../middlewares/checkSales";
 import multer from "multer";
 
 const upload = multer();

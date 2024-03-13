@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import Slot from "../models/slotModel.ts";
-import { daywiseFormatData } from "../utils/dayWiseFormatData.ts";
-import Appointments from "../models/appointmentModel.ts";
-import { formatTime } from "../utils/getTime.ts";
-import mongoose from "mongoose";
+import Slot from "../models/slotModel";
+import { daywiseFormatData } from "../utils/dayWiseFormatData";
+import Appointments from "../models/appointmentModel";
 
 interface IQuery {
   day?: "Monday" | "Tuesday" | "Wednesday" | "Thusday" | "Friday" | "Saturday";

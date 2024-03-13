@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/userModel.ts";
+import User from "../models/userModel";
 
 export interface IGetUserAuthInfoRequest extends Request {
   user: any;

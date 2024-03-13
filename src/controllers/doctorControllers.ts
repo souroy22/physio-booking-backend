@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import User from "../models/userModel.ts";
-import Slot from "../models/slotModel.ts";
+import User from "../models/userModel";
+import Slot from "../models/slotModel";
 
 const doctorControllers = {
   scheduleSlots: async (req: Request, res: Response) => {

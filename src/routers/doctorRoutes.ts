@@ -1,8 +1,8 @@
 import express from "express";
-import doctorControllers from "../controllers/doctorControllers.ts";
-import { verifyToken } from "../middlewares/verifyToken.ts";
-import checkSalerOrAdmin from "../middlewares/checkSalerOrAdmin.ts";
-import checkDoctor from "../middlewares/checkDoctor.ts";
+import doctorControllers from "../controllers/doctorControllers";
+import { verifyToken } from "../middlewares/verifyToken";
+import checkSalerOrAdmin from "../middlewares/checkSalerOrAdmin";
+import checkDoctor from "../middlewares/checkDoctor";
 
 const doctorRouters = express.Router();
 

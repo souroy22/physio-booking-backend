@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import User from "../models/userModel.ts";
-import getUserData from "../utils/getUser.ts";
-import verifyPassword from "../utils/verifyPassword.ts";
-import genarateToken, { USER_TYPE } from "../utils/genarateToken.ts";
-import destroyToken from "../utils/destroyToken.ts";
+import User from "../models/userModel";
+import getUserData from "../utils/getUser";
+import verifyPassword from "../utils/verifyPassword";
+import genarateToken, { USER_TYPE } from "../utils/genarateToken";
+import destroyToken from "../utils/destroyToken";
 
 const authControllers = {
   signup: async (req: Request, res: Response) => {

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/userModel.ts";
+import User from "../models/userModel";
 
 type DATA_TYPE = {
   name?: string;

@@ -1,9 +1,9 @@
 import express from "express";
 import authRouters from "./authRouters.js";
-import doctorRouters from "./doctorRoutes.ts";
-import dayRouters from "./dayRouters.ts";
-import slotRouters from "./slotRouters.ts";
-import userRouters from "./userRouters.ts";
+import doctorRouters from "./doctorRoutes";
+import dayRouters from "./dayRouters";
+import slotRouters from "./slotRouters";
+import userRouters from "./userRouters";
 
 const router = express.Router();
 

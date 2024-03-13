@@ -1,7 +1,7 @@
 import express from "express";
-import { verifyToken } from "../middlewares/verifyToken.ts";
-import dayControllers from "../controllers/dayControllers.ts";
-import checkAdmin from "../middlewares/checkAdmin.ts";
+import { verifyToken } from "../middlewares/verifyToken";
+import dayControllers from "../controllers/dayControllers";
+import checkAdmin from "../middlewares/checkAdmin";
 
 const dayRouters = express.Router();
 

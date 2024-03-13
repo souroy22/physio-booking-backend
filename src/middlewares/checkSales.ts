@@ -1,5 +1,5 @@
 import { NextFunction, Response } from "express";
-import { IGetUserAuthInfoRequest } from "./verifyToken.ts";
+import { IGetUserAuthInfoRequest } from "./verifyToken";
 
 const checkSalesPerson = async (
   req: IGetUserAuthInfoRequest,

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import Day from "../models/dayModel.ts";
-import Slot from "../models/slotModel.ts";
+import Day from "../models/dayModel";
+import Slot from "../models/slotModel";
 
 const days = [
   "Monday",

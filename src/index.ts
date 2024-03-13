@@ -7,8 +7,8 @@ import cors from "cors";
 
 // files
 import router from "./routers/index.js";
-import connectDB from "./db/dbConfig.ts";
-// import { corsOptions } from "./config/corsConfig.ts";
+import connectDB from "./db/dbConfig";
+// import { corsOptions } from "./config/corsConfig";
 
 const app = express();
 const PORT: string = process.env.PORT || "8000";

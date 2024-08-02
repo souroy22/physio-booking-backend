@@ -10,7 +10,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
 // files
-const index_js_1 = __importDefault(require("./routers/index.js"));
+const routers_1 = __importDefault(require("./routers"));
 const dbConfig_1 = __importDefault(require("./db/dbConfig"));
 // import { corsOptions } from "./config/corsConfig";
 const app = (0, express_1.default)();
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
     res.send("Hiiii Hello");
 });
 (0, dbConfig_1.default)();
-app.use("/api/v1", index_js_1.default);
+app.use("/api/v1", routers_1.default);
 app.listen(parseInt(PORT, 10), `0.0.0.0`, () => {
     console.log(`Server is running on PORT: ${PORT}`);
 });

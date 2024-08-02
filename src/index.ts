@@ -6,7 +6,7 @@ import morgan from "morgan";
 import cors from "cors";
 
 // files
-import router from "./routers/index.js";
+import router from "./routers";
 import connectDB from "./db/dbConfig";
 // import { corsOptions } from "./config/corsConfig";
 

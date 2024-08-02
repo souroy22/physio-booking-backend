@@ -1,5 +1,5 @@
 import express from "express";
-import authRouters from "./authRouters.js";
+import authRouters from "./authRouters";
 import doctorRouters from "./doctorRoutes";
 import dayRouters from "./dayRouters";
 import slotRouters from "./slotRouters";

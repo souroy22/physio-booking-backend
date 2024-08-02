@@ -10,6 +10,7 @@ exports.corsOptions = {
             callback(null, true);
         }
         else {
+            console.log("origin:", origin);
             callback(new Error("Not allowed by CORS"));
         }
     },
